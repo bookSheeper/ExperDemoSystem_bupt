@@ -246,7 +246,6 @@ void ExperDemoSystem::ImageLabel() {
     IplImage* procImage = exp->Neuron->ImgThresh;
 
     cv::Mat mat = cv::cvarrToMat(image);
-    exp->img_disp = cv::cvarrToMat(image);  //将显示的图像拷贝到exp中用于视频记录
     cv::Mat procmat = cv::cvarrToMat(procImage);
 
     std::string eleganNum = "Test_" + std::to_string(ui.expNum->value());
@@ -458,6 +457,8 @@ void ExperDemoSystem::moveStage() {
 //线程3：用于记录线虫数据
 void ExperDemoSystem::recordData() {
     while (m_record_running) {
+        if (!exp->Params->Record) continue;
+
         auto start = std::chrono::high_resolution_clock::now();
 
         //每隔40ms记录一次相机数据，记录耗时2~3ms，可能存在线程阻塞问题
@@ -469,21 +470,21 @@ void ExperDemoSystem::recordData() {
         if (duration.count() > 1000)
         {//超过1s会报警，并打印输出
             std::cout << "[WARNING] DoWriteToDisk took " 
-                << duraton.count() << " ms" << std::endl;
+                << duration.count() << " ms" << std::endl;
         }
 
-        auto remaining_wait = std::chrono::milliseconds(40) - duration;
-        if (remaining_wait > std::chrono::milliseconds(0))
-        {//如果在40ms内，可以选择打印信息
-            std::cout << "Frame #" << exp->Neuron->frameNum << " take " 
-                << duration.count() << " ms" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(40));
-        }
-        else
-        {//记录时间超过40ms会直接打印信息
-            std::cout << "[INFO] DoWriteToDisk exceeded 40ms cycle time by "
-				<< -remaining_wait.count() << " ms" << std::endl;
-        }
+    //    auto remaining_wait = std::chrono::milliseconds(40) - duration;
+    //    if (remaining_wait > std::chrono::milliseconds(0))
+    //    {//如果在40ms内，可以选择打印信息
+    //        std::cout << "Frame #" << exp->Neuron->frameNum << " take " 
+    //            << duration.count() << " ms" << std::endl;
+    //        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+    //    }
+    //    else
+    //    {//记录时间超过40ms会直接打印信息
+    //        std::cout << "[INFO] DoWriteToDisk exceeded 40ms cycle time by "
+				//<< -remaining_wait.count() << " ms" << std::endl;
+    //    }
     }
 }
 
@@ -1110,19 +1111,19 @@ void ExperDemoSystem::on_Random_Stimulus_clicked()
     // 3. 将随机选择的参数更新到UI控件上
     // =================================================================
 
-    if (ui.voltageSlider) {
-        ui.voltageSlider->setValue(chosenVoltage);
-    }
-    else {
-        qWarning() << "警告: 未找到名为 horizontalSlider_Voltage 的电压滑块控件。";
-    }
+	if (ui.voltageSlider) {
+		ui.voltageSlider->setValue(chosenVoltage);
+	}
+	else {
+		std::cout << "Warning: Voltage slider control named horizontalSlider_Voltage not found." << std::endl;
+	}
 
-    if (ui.waveformBox) {
-        ui.waveformBox->setCurrentIndex(chosenWaveformIndex);
-    }
-    else {
-        qWarning() << "警告: 未找到名为 comboBox_Waveform 的波形下拉框控件。";
-    }
+	if (ui.waveformBox) {
+		ui.waveformBox->setCurrentIndex(chosenWaveformIndex);
+	}
+	else {
+		std::cout << "Warning: Waveform dropdown control named comboBox_Waveform not found." << std::endl;
+	}
 
 
     // 4. (可选) 在应用程序的输出窗口打印日志，方便您确认本次随机选择的结果

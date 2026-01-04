@@ -79,7 +79,7 @@ typedef struct ExperimentStruct{
 
 	/** Write Video To File **/
 	//CvVideoWriter* Vid;  //Video Writer
-	cv::VideoWriter vid_writer;  //采用opencv340的videowriter记录视频
+	cv::VideoWriter* vid_writer;  //采用opencv340的videowriter记录视频
 	double standardCorX;   //相对于坐标点的标准坐标
 	double standardCorY;
 	int Voltage;  //记录电场的电压
@@ -121,7 +121,6 @@ typedef struct ExperimentStruct{
 	CvPoint pos_accumulate;
 	int pos_num;
 
-	cv::Mat img_disp;
 } Experiment;
 
 /*

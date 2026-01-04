@@ -195,7 +195,8 @@ Experiment* CreateExperimentStruct() {
 	strcpy(exp->dirname, "D:/Hasuyo/Code_files/C++_Code/WormTrackingSys/w1/");
 
 	/** Write Video To File **/
-	exp->Vid = NULL; //Video Writer
+	//exp->Vid = NULL; //Video Writer
+	exp->vid_writer = NULL;
 	exp->standardCorX = 0;
 	exp->standardCorY = 0;
 	exp->Voltage = 0;
@@ -279,6 +280,8 @@ void InitializeExperiment(Experiment* exp) {
 
 	exp->sender = new UDPSender;
 	exp->sender->start();
+
+	exp->vid_writer = new cv::VideoWriter();
 }
 
 /*
@@ -435,6 +438,9 @@ void ReleaseExperiment(Experiment* exp) {
 		delete exp->sender;
 
 	//std::cout << "exp has been released!" << std::endl;
+
+	if (exp->vid_writer != NULL)
+		delete exp->vid_writer;
 }
 
 /* Destroy the experiment object.
@@ -903,9 +909,9 @@ int SetupRecording(Experiment* exp) {
 	//exp->Vid = cvCreateVideoWriter(MovieFileName,
 	//	CV_FOURCC('M', 'J', 'P', 'G'), 25, cvSize(NSIZEX / 2, NSIZEY / 2),  //'M', 'J', 'P', 'G'
 	//	0);    //修改了记录帧数，将帧数设定为25帧 （24/7/16) 
-	exp->vid_writer.open(MovieFileName, codec, fps, cvSize(NSIZEX / 2, NSIZEY / 2), 0);  //2025-12-29 by ysh
+	exp->vid_writer->open(MovieFileName, CV_FOURCC('M', 'J', 'P', 'G'), 25, cvSize(NSIZEX / 2, NSIZEY / 2), 0);  //2025-12-29 by ysh
 
-	if (!exp->vid_writer.isOpened())
+	if (!exp->vid_writer->isOpened())
 	{
 		printf("\tERROR in SetupRecording! exp->Vid is NULL\nYou probably are missing the default codec.\n");
 		return -1;
@@ -924,8 +930,8 @@ int SetupRecording(Experiment* exp) {
  */
 void FinishRecording(Experiment* exp) {
 	/** Finish Writing Video to File and Release Writer **/
-	if (exp->Vid != NULL)
-		cvReleaseVideoWriter(&(exp->Vid));
+	//if (exp->Vid != NULL)
+	//	cvReleaseVideoWriter(&(exp->Vid));
 	/** Finish Writing to Disk **/
 
 	if (exp->Params->Record == 1) {
@@ -945,11 +951,12 @@ void DoWriteToDisk(Experiment* exp, int distance) {
 
 	/** 记录视频数据 **/
 	if (exp->Params->Record) {
-		//cvResize(exp->fromCCD->iplimg, exp->SubSampled, CV_INTER_LINEAR);
+		cvResize(exp->fromCCD->iplimg, exp->SubSampled, CV_INTER_LINEAR);
 
 		//cvWriteFrame(exp->Vid, exp->SubSampled);
-		exp->vid_writer.write(exp->img_disp);
-		if (exp->Vid == NULL) printf("\tERROR in DoWriteToDisk!\n\texp->Vid is NULL\n");
+		cv::Mat mat = cv::cvarrToMat(exp->SubSampled);
+		exp->vid_writer->write(mat);
+		//if (exp->Vid == NULL) printf("\tERROR in DoWriteToDisk!\n\texp->Vid is NULL\n");
 	}
 
 	/** 记录yaml数据 **/
